@@ -1,5 +1,6 @@
 (ns app.core
   (:require [clojure.string :as str]
+            [cljs.pprint :as pp]
             [om.core :as om :include-macros true]
             [sablono.core :as html :refer-macros [html]]))
 
@@ -110,7 +111,7 @@
         [:h2 "RSVP"]
         [:form {:id "rsvpsubmit"
                 :onSubmit #(do (.. % (preventDefault))
-                               (js/alert (str "Submitting " (pr-str card))))}
+                               (om/update! card :sent true))}
          [:section {:class "guests"}
           (map-indexed
            (fn [n {:keys [name] :as guest}]
@@ -173,12 +174,21 @@
         1 (om/build rsvp-card-view (select-keys data [:results :card]))
         0 "Zero!"))))
 
-(defn rsvp-view [{:keys [results] :as data} owner]
+(defn rsvp-confirmation-view [card owner]
+  (om/component
+   (html
+    [:main
+     [:h1 "Confirmed!"]
+     [:pre (with-out-str (pp/pprint @card))]])))
+
+(defn rsvp-view [{results :results, {:keys [sent] :as card} :card, :as data} owner]
   (reify om/IRender
     (render [_]
-      (if (nil? results)
-        (om/build rsvp-search-view data)
-        (om/build rsvp-search-results-view data)))))
+      (if sent
+        (om/build rsvp-confirmation-view card)
+        (if (nil? results)
+          (om/build rsvp-search-view data)
+          (om/build rsvp-search-results-view data))))))
 
 (defn main-view [{:keys [selected rsvp-search] :as data} owner]
   (reify om/IRender
