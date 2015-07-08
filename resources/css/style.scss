@@ -17,7 +17,7 @@ $breakpoint:   720px;
 /* body and general styles */
 
 body {
-  background: #fff url(../background.jpg) top center/cover no-repeat fixed;
+  background: #fff url(../images/background.jpg) top center/cover no-repeat fixed;
   color: #000;
   font-family: garamond, georgia, serif;
   font-size: 18px;
@@ -74,12 +74,13 @@ header {
 
   ul {
     font-family: bebas;
-    font-size: 18px;
+    font-size: 14px;
     word-spacing: 4px;
     list-style-type: none;
     margin: 8px 0 0 -40px;
 
     @media screen and (min-width: $breakpoint) {
+      font-size: 18px;
       margin-top: 21px;
     }
   }
@@ -232,13 +233,14 @@ main {
 
     button {
       font-size: 14px;
+      height: 28px;
     }
   }
 
   #rsvpsubmit {
-    display: flex;
 
     @media screen and (min-width: $breakpoint) {
+      display: flex;
       justify-content: space-between;
     }
 
