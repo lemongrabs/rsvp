@@ -1,0 +1,170 @@
+/* can be compiled from scss to css w/ the ruby gem 'sass' and the command `sass --watch scss:css --sourcemap=none` */
+/* there should probably be a mobile breakpoint for < 720px wide viewports */
+/* variables, mixins, fonts */
+@font-face {
+  font-family: 'bebas';
+  src: url("bebas.woff") format("woff"); }
+/* body and general styles */
+body {
+  background: #fff url(../images/background.jpg) top center/cover no-repeat fixed;
+  color: #000;
+  font-family: garamond, georgia, serif;
+  font-size: 18px; }
+  body::before {
+    content: '';
+    z-index: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: linear-gradient(to bottom, #000, transparent);
+    background-size: 100% 350px;
+    background-repeat: no-repeat;
+    opacity: .6; }
+
+header, main {
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+  margin-bottom: 50px; }
+
+h1, h2, h3, h4, h5 {
+  font-family: bebas;
+  word-spacing: 5px;
+  margin: 0;
+  padding: 0; }
+
+/* header */
+header {
+  color: #fff;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  max-width: 960px; }
+  @media screen and (min-width: 720px) {
+    header {
+      display: flex;
+      justify-content: space-between; } }
+  header h1 {
+    font-weight: normal;
+    font-size: 36px;
+    word-spacing: 10px;
+    display: inline-block; }
+  header ul {
+    font-family: bebas;
+    font-size: 18px;
+    word-spacing: 4px;
+    list-style-type: none;
+    margin: 8px 0 0 -40px; }
+    @media screen and (min-width: 720px) {
+      header ul {
+        margin-top: 21px; } }
+  header li {
+    display: inline; }
+    header li:not(:first-child) {
+      margin-left: 20px; }
+    header li a {
+      color: #fff;
+      text-decoration: none;
+      padding-bottom: 4px; }
+    header li.selected a,
+    header li a:hover {
+      border-bottom: 5px solid #dc3f66; }
+
+/* main */
+main {
+  max-width: 720px;
+  box-sizing: border-box;
+  padding: 20px;
+  background-color: #eef3ef;
+  border: 5px solid #000; }
+  main::after {
+    display: block;
+    content: '';
+    clear: both; }
+  main h2 {
+    margin-bottom: 20px; }
+  main p,
+  main li,
+  main label {
+    line-height: 130%; }
+  main a {
+    color: #000;
+    font-weight: bold; }
+    main a:hover {
+      color: #dc3f66;
+      text-decoration: none; }
+  main form {
+    margin: 0; }
+  @media screen and (min-width: 720px) {
+    main section {
+      width: 48%; } }
+  main fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 20px 0; }
+  main input[type=text],
+  main textarea {
+    font-family: garamond, georgia, serif;
+    font-size: 16px;
+    margin: 10px 0 20px; }
+  main input[type=text] {
+    border: none;
+    border-bottom: 1px solid black;
+    background-color: transparent;
+    width: 100%; }
+  main textarea {
+    display: block;
+    width: 100%;
+    height: 50px;
+    border: 1px solid #000;
+    background-color: transparent;
+    resize: none;
+    overflow: scroll-y; }
+  main button {
+    font-family: bebas;
+    word-spacing: 5px;
+    display: inline-block;
+    cursor: pointer;
+    clear: both;
+    font-size: 24px;
+    padding: 5px 10px;
+    background-color: #000;
+    color: #fff;
+    border: 0;
+    margin-top: 10px;
+    float: right; }
+    main button.small {
+      font-size: 14px; }
+    main button:hover {
+      background-color: #dc3f66; }
+  main #rsvpsearch {
+    width: 100%; }
+    main #rsvpsearch .guestsearch {
+      width: 100%;
+      font-size: 24px; }
+  main #rsvpresults {
+    list-style-type: none;
+    margin-left: -40px; }
+    main #rsvpresults li {
+      display: flex;
+      justify-content: space-between;
+      padding-bottom: 10px; }
+      main #rsvpresults li:not(:last-child) {
+        border-bottom: 1px solid #000; }
+    main #rsvpresults span {
+      margin-top: 15px; }
+    main #rsvpresults button {
+      font-size: 14px; }
+  main #rsvpsubmit {
+    display: flex; }
+    @media screen and (min-width: 720px) {
+      main #rsvpsubmit {
+        justify-content: space-between; } }
+    main #rsvpsubmit .guestname {
+      font-family: bebas;
+      font-size: 18px;
+      word-spacing: 5px;
+      margin: 0 0 10px 0; }
+    main #rsvpsubmit .small {
+      font-size: 16px; }
