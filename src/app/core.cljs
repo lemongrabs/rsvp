@@ -6,26 +6,28 @@
 (enable-console-print!)
 
 (defonce app-state
-  (atom {:nav {:selected :details}
-         :rsvp {:input "", :results nil}}))
+  (atom {:selected [:details]
+         :rsvp-search {:name ""
+                       :results nil
+                       :card {:contact nil}}}))
 
-(defn nav-view [{:keys [selected] :as data} owner]
+(defn nav-view [selected owner]
   (reify om/IRender
     (render [_]
       (html [:header
              [:h1 "Anh-Thu & Zane"]
              [:ul
               (map (fn [[key text]]
-                     [:li (if (= selected key) {:class "selected"} {})
+                     [:li (if (= selected [key]) {:class "selected"} {})
                       [:a {:href "#"
-                           :onClick #(om/update! data :selected key)}
+                           :onClick #(om/update! selected 0 key)}
                        text]])
                    (partition 2 [:details       "Details"
                                  :where-to-stay "Where to stay"
                                  :rsvp          "RSVP"]))
               [:li [:a {:href "http://thankfulregistry.com/anhthuandzane"} "Registry"]]]]))))
 
-(defn details-view [data owner]
+(defn details-view [selected owner]
   (om/component
    (html
     [:main
@@ -43,41 +45,41 @@
      [:p
       "We would love it if you could "
       [:a {:onClick #(do (.. % (preventDefault %))
-                         (println "Would be selecting 'RSVP' here!"))}
+                         (om/update! selected 0 :rsvp))}
        "RSVP"]
       " by August 19th!"]])))
 
-(defn where-to-stay-view [data owner]
-  (om/component
-   (html
-    [:main
-     [:h2 "Where to stay"]
-     [:p "There are tons of great accommodations available in NYC, but we are also happy to help you in your search! Consider this a starting list of recommendations."]
-     [:p "Our venue is located in Williamsburg (94 Wythe Ave.) near both the L and the G trains, so if maximum ease of transportation to the event is a concern we'd recommend searching for lodging that's within walking distance of either of those train lines."]
-     [:ul
-      [:li
-       [:a {:href "https://www.airbnb.com"} "Airbnb"]
-       " - Williamsburg and Greenpoint will probably be the most convenient neighborhoods to search for, but anything in Manhattan south of Central Park or in Brooklyn off of the L or G train lines would be a convenient subway ride away."]
-      (map (fn [{:keys [url name notes]}]
-             [:li
-              [:a {:href url} name]
-              ": " notes])
-           
-           [{:url "http://wythehotel.com/"
-             :name "Wythe Hotel"
-             :notes "80 Wythe Ave. ($$$, but across the street from our venue!)"}
-            {:url "http://hotel17ny.com/"
-             :name "Hotel 17"
-             :notes "225 E. 17th St. ($$)"}
-            {:url "http://www.nylofthostel.com/"
-             :name "New York Loft Hostel"
-             :notes "249 Varet St. ($)"}])]])))
+(def where-to-stay
+  (html
+   [:main
+    [:h2 "Where to stay"]
+    [:p "There are tons of great accommodations available in NYC, but we are also happy to help you in your search! Consider this a starting list of recommendations."]
+    [:p "Our venue is located in Williamsburg (94 Wythe Ave.) near both the L and the G trains, so if maximum ease of transportation to the event is a concern we'd recommend searching for lodging that's within walking distance of either of those train lines."]
+    [:ul
+     [:li
+      [:a {:href "https://www.airbnb.com"} "Airbnb"]
+      " - Williamsburg and Greenpoint will probably be the most convenient neighborhoods to search for, but anything in Manhattan south of Central Park or in Brooklyn off of the L or G train lines would be a convenient subway ride away."]
+     (map (fn [{:keys [url name notes]}]
+            [:li
+             [:a {:href url} name]
+             ": " notes])
+          
+          [{:url "http://wythehotel.com/"
+            :name "Wythe Hotel"
+            :notes "80 Wythe Ave. ($$$, but across the street from our venue!)"}
+           {:url "http://hotel17ny.com/"
+            :name "Hotel 17"
+            :notes "225 E. 17th St. ($$)"}
+           {:url "http://www.nylofthostel.com/"
+            :name "New York Loft Hostel"
+            :notes "249 Varet St. ($)"}])]]))
 
 (defn find-results [x]
-  [{:guests [{:name "Henry Bean", :email "henry@bean.com"}
-             {:name "Zelda Cat", :email "zelda@cat.com"}]}])
+  [[{:name "Henry Bean", :email "henry@bean.com"}
+    {:name "Zelda Cat", :email "zelda@cat.com"}]
+   [{:name "Disco Cat", :email "disco@cat.com"}]])
 
-(defn rsvp-search-view [{:keys [input] :as data} owner]
+(defn rsvp-search-view [{:keys [name results] :as data} owner]
   (reify om/IRender
     (render [_]
       (html
@@ -85,33 +87,30 @@
         [:h2 "RSVP"]
         [:form {:id "rsvpsearch"
                 :onSubmit #(do (.. % (preventDefault))
-                               (om/update! data :results (find-results (.-value (om/get-node owner "input")))))}
-         [:label {:for "guestsearch"} "Enter the name of your invitation:"]
+                               (om/update! data :results (find-results name)))}
+         [:label {:for "guestsearch"} "Enter the name on your invitation:"]
          [:input {:type "text"
                   :name "guestseearch"
                   :class "guestsearch"
                   :placeholder "e.g. Barack and Michelle Obama"
-                  :value input
-                  :ref "input"
-                  :onChange #(om/update! data :input (.-value (om/get-node owner "input")))}]
+                  :value name
+                  :ref "name"
+                  :onChange #(om/update! data :name (.-value (om/get-node owner "name")))}]
          [:button {:type "submit"}
           "Find RSVP"]]]))))
 
-(defn rsvp-search-results-one-view [{:keys [guests food-preferences] :as data} owner]
+(defn rsvp-card-view [{[results] :results, {:keys [contact food-preferences] :as card} :card, :as data} owner]
   (reify
-    om/IInitState
-    (init-state [_]
-      (let [{:keys [guests] :as data} (om/get-props owner)]
-        {:contact (-> guests first :email)}))
-    
-    om/IRenderState
-    (render-state [this {:keys [contact] :as state}]
+    om/IRender
+    (render [_]
+      (when (nil? contact)
+        (om/update! card :contact (:email (first results))))
       (html
        [:main
         [:h2 "RSVP"]
         [:form {:id "rsvpsubmit"
                 :onSubmit #(do (.. % (preventDefault))
-                               (println "Would be submitting here."))}
+                               (js/alert (str "Submitting " (pr-str card))))}
          [:section {:class "guests"}
           (map-indexed
            (fn [n {:keys [name] :as guest}]
@@ -119,16 +118,16 @@
               [:input {:type "text", :class "guestname", :value name}]
               [:fieldset
                [:div
-                (map (fn [[label for-str]]
+                (map (fn [[label for-str val]]
                        [:div
                         [:input {:type "radio"
                                  :name (str "guest" (inc n) "rsvp")
-                                 :onChange #(om/update! data [:guests n :rsvp] (= for-str "yes"))}]
+                                 :onChange #(om/update! card [:rsvps name] val)}]
                         [:label {:for (str "guest" (inc n) for-str)}
                          label]])
-                     (partition 2 ["Will attend"   "yes"
-                                   "Sends regrets" "no"]))]]])
-           guests)
+                     (partition 3 ["Will attend"   "yes" true
+                                   "Sends regrets" "no" false]))]]])
+           results)
           [:p {:class "small"}
            "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]]
          [:section {:class "addendums"}
@@ -137,46 +136,61 @@
           [:textarea {:name "foodpref"
                       :ref "food-preferences"
                       :value food-preferences
-                      :onChange #(om/update! data :food-preferences (.-value (om/get-node owner "food-preferences")))}]
+                      :onChange #(om/update! card :food-preferences (.-value (om/get-node owner "food-preferences")))}]
 
           [:label {:for "contact" :class "small"}
            "If we need to contact you with any last-minute information, is this a good email address to use?"]
           [:input {:type "text"
                    :ref "contact"
                    :value contact
-                   :onChange #(om/set-state! owner :contact (.-value (om/get-node owner "contact")))}]
+                   :onChange #(om/update! card :contact (.-value (om/get-node owner "contact")))}]
           
           [:button {:type "submit"} "RSVP"]]]]))))
 
-(defn rsvp-search-results-view [{:keys [results]} owner]
+(defn rsvp-multiple-results-view [{:keys [name results] :as data} owner]
   (reify
-    om/IRenderState
-    (render-state [_ {:keys [contact input] :as state}]
+    om/IRender
+    (render [_]
       (html
        [:main
-        (condp <= (count results)
-          2 [:h2 (str "Oops! There are multiple matches for '" input "'")]
-          1 (om/build rsvp-search-results-one-view (first results))
-          0 "Zero!")]))))
+        [:h2 (str "Oops! There are multiple matches for '" name "'")]
+        [:p "But which RSVP is yours?"]
+        [:ul {:id "rsvpresults"}
+         (map-indexed (fn [n {:keys [name]}]
+                        [:li
+                         [:span name]
+                         [:button
+                          {:onClick (fn [_] (om/transact! data :results (fn [results] [(get results n)])))}
+                          "Select"]])
+                      (map first results))]]))))
 
-(defn rsvp-view [{:keys [input results] :as data} owner]
+(defn rsvp-search-results-view [{:keys [name results] :as data} owner]
+  (reify
+    om/IRender
+    (render [_]
+      (condp <= (count results)
+        2 (om/build rsvp-multiple-results-view data)
+        1 (om/build rsvp-card-view (select-keys data [:results :card]))
+        0 "Zero!"))))
+
+(defn rsvp-view [{:keys [results] :as data} owner]
   (reify om/IRender
     (render [_]
-      (if-not (some? results)
+      (if (nil? results)
         (om/build rsvp-search-view data)
         (om/build rsvp-search-results-view data)))))
 
-(defn main-view [{:keys [nav rsvp] :as data} owner]
+(defn main-view [{:keys [selected rsvp-search] :as data} owner]
   (reify om/IRender
     (render [_]
       (println "@app-state" data)
       (html
        [:div
-        (om/build nav-view nav)
-        (case (-> data :nav :selected)
-          :details (om/build details-view data)
-          :where-to-stay (om/build where-to-stay-view data)
-          :rsvp (om/build rsvp-view rsvp))]))))
+        (om/build nav-view selected)
+        (case selected
+          [:details]       (om/build details-view selected)
+          [:where-to-stay] where-to-stay
+          [:rsvp]          (om/build rsvp-view rsvp-search))]))))
 
 (defn main []
   (om/root main-view app-state {:target (. js/document (getElementById "app"))}))
