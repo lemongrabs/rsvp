@@ -119,9 +119,9 @@
               [:input {:type "text", :class "guestname", :value name}]
               [:fieldset
                [:div
-                (let [radio-name (str "guest" (inc n) "rsvp")]
+                (let [radio-name (str "guest" n "rsvp")]
                   (map (fn [[label for-str val]]
-                         (let [input-id (str "guest" (inc n) for-str)]
+                         (let [input-id (str "guest" n for-str)]
                            [:div
                             [:input {:type "radio"
                                      :id input-id
