@@ -9,18 +9,6 @@
   (atom {:nav {:selected :details}
          :rsvp {:input "", :results nil}}))
 
-(defn main-view [{:keys [nav rsvp] :as data} owner]
-  (reify om/IRender
-    (render [_]
-      (println "@app-state" data)
-      (html
-       [:div
-        (om/build nav-view nav)
-        (case (-> data :nav :selected)
-          :details (om/build details-view data)
-          :where-to-stay (om/build where-to-stay-view data)
-          :rsvp (om/build rsvp-view rsvp))]))))
-
 (defn nav-view [{:keys [selected] :as data} owner]
   (reify om/IRender
     (render [_]
@@ -50,7 +38,7 @@
      [:p {:align "center"}
       [:a {:href "https://goo.gl/maps/wXKle"} "Kinfolk 94"]
       [:br] "94 Wythe Ave."
-      [:br] Brooklyn, NY 11249
+      [:br] "Brooklyn, NY 11249"
       [:br] "(near the Bedford L stop, or the Nassau G stop)"]
      [:p
       "We would love it if you could "
@@ -84,13 +72,6 @@
             {:url "http://www.nylofthostel.com/"
              :name "New York Loft Hostel"
              :notes "249 Varet St. ($)"}])]])))
-
-(defn rsvp-view [{:keys [input results] :as data} owner]
-  (reify om/IRender
-    (render [_]
-      (if-not (some? results)
-        (om/build rsvp-search-view data)
-        (om/build rsvp-search-results-view data)))))
 
 (defn find-results [x]
   [{:guests [{:name "Henry Bean", :email "henry@bean.com"}
@@ -170,13 +151,32 @@
 (defn rsvp-search-results-view [{:keys [results]} owner]
   (reify
     om/IRenderState
-    (render-state [_ {:keys [contact] :as state}]
+    (render-state [_ {:keys [contact input] :as state}]
       (html
        [:main
         (condp <= (count results)
-          2 [:h2 (str "Oops! There are multiple matches for '" query "'")]
+          2 [:h2 (str "Oops! There are multiple matches for '" input "'")]
           1 (om/build rsvp-search-results-one-view (first results))
           0 "Zero!")]))))
+
+(defn rsvp-view [{:keys [input results] :as data} owner]
+  (reify om/IRender
+    (render [_]
+      (if-not (some? results)
+        (om/build rsvp-search-view data)
+        (om/build rsvp-search-results-view data)))))
+
+(defn main-view [{:keys [nav rsvp] :as data} owner]
+  (reify om/IRender
+    (render [_]
+      (println "@app-state" data)
+      (html
+       [:div
+        (om/build nav-view nav)
+        (case (-> data :nav :selected)
+          :details (om/build details-view data)
+          :where-to-stay (om/build where-to-stay-view data)
+          :rsvp (om/build rsvp-view rsvp))]))))
 
 (defn main []
   (om/root main-view app-state {:target (. js/document (getElementById "app"))}))
