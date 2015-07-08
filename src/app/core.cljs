@@ -119,15 +119,18 @@
               [:input {:type "text", :class "guestname", :value name}]
               [:fieldset
                [:div
-                (map (fn [[label for-str val]]
-                       [:div
-                        [:input {:type "radio"
-                                 :name (str "guest" (inc n) "rsvp")
-                                 :onChange #(om/update! card [:rsvps name] val)}]
-                        [:label {:for (str "guest" (inc n) for-str)}
-                         label]])
-                     (partition 3 ["Will attend"   "yes" true
-                                   "Sends regrets" "no" false]))]]])
+                (let [radio-name (str "guest" (inc n) "rsvp")]
+                  (map (fn [[label for-str val]]
+                         (let [input-id (str "guest" (inc n) for-str)]
+                           [:div
+                            [:input {:type "radio"
+                                     :id input-id
+                                     :name radio-name
+                                     :onChange #(om/update! card [:rsvps name] val)}]
+                            [:label {:for input-id}
+                             label]]))
+                       (partition 3 ["Will attend"   "yes" true
+                                     "Sends regrets" "no" false])))]]])
            results)
           [:p {:class "small"}
            "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]]
