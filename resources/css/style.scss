@@ -2,25 +2,39 @@
 /* there should probably be a mobile breakpoint for < 720px wide viewports */
 
 
-/* variables, mixins, fonts */
+/* variables, mixins */
 
 $almost-white: #eef3ef;
 $pink:         #dc3f66;
 $breakpoint:   720px;
 
+
+/* fonts */
+
 @font-face {
   font-family: 'bebas';
-  src:  url('bebas.woff') format('woff');
+  font-weight: 400;
+  src: url('../fonts/BebasNeue Regular.otf') format('opentype'),
+       url('../fonts/BebasNeue Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'bebas';
+  font-weight: 700;
+  src: url('../fonts/BebasNeue Bold.otf') format('opentype'),
+       url('../fonts/BebasNeue Bold.ttf') format('truetype');
 }
 
 
 /* body and general styles */
 
 body {
-  background: #fff url(../background.jpg) top center/cover no-repeat fixed;
+  background: #fff url(../images/background.jpg) top center/cover no-repeat fixed;
   color: #000;
   font-family: garamond, georgia, serif;
   font-size: 18px;
+  margin: 0;
+  padding: 20px 0;
 
   &::before {
     content: '';
@@ -41,12 +55,11 @@ header, main {
   margin: 0 auto;
   position: relative;
   z-index: 10;
-  margin-bottom: 50px;
+  margin-bottom: 25px;
 }
 
 h1, h2, h3, h4, h5 {
   font-family: bebas;
-  word-spacing: 5px;
   margin: 0;
   padding: 0;
 }
@@ -66,22 +79,20 @@ header {
   }
 
   h1 {
-    font-weight: normal;
-    font-size: 36px;
-    word-spacing: 10px;
+    font-size: 48px;
     display: inline-block;
   }
 
   ul {
     font-family: bebas;
-    font-size: 14px;
-    word-spacing: 4px;
+    font-weight: bold;
+    font-size: 20px;
     list-style-type: none;
     margin: 8px 0 0 -40px;
 
     @media screen and (min-width: $breakpoint) {
-      font-size: 18px;
-      margin-top: 21px;
+      font-size: 22px;
+      margin-top: 19px;
     }
   }
 
@@ -95,7 +106,6 @@ header {
     a {
       color: #fff;
       text-decoration: none;
-      padding-bottom: 4px;
     }
 
     &.selected a,
@@ -183,7 +193,7 @@ main {
 
   button {
     font-family: bebas;
-    word-spacing: 5px;
+    font-weight: bold;
     display: inline-block;
     cursor: pointer;
     clear: both;
@@ -197,6 +207,10 @@ main {
 
     &.small {
       font-size: 14px;
+    }
+
+    &[type=submit] {
+      padding-top: 10px;
     }
 
     &:hover {
@@ -247,7 +261,6 @@ main {
     .guestname {
       font-family: bebas;
       font-size: 18px;
-      word-spacing: 5px;
       margin: 0 0 10px 0;
     }
 

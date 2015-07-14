@@ -16,7 +16,7 @@
   (reify om/IRender
     (render [_]
       (html [:header
-             [:h1 "Anh-Thu & Zane"]
+             [:h1 "Anh-Thu + Zane"]
              [:ul
               (map (fn [[key text]]
                      [:li (if (= selected [key]) {:class "selected"} {})
