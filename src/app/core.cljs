@@ -2,9 +2,16 @@
   (:require [clojure.string :as str]
             [cljs.pprint :as pp]
             [om.core :as om :include-macros true]
-            [sablono.core :as html :refer-macros [html]]))
+            [sablono.core :as html :refer-macros [html]]
+            [app.guests :refer [guests]]))
 
 (enable-console-print!)
+
+(defonce Parse
+  (doto (.  js/window -Parse)
+    (.initialize "GAyi1ijtz2VMauaRRDqgcfqiiJyW5vQtwVFbFjfc" "EZ5xm8O1AByYc75LUTFL4dj2vhfZg93vTOFeb1Mh")))
+
+(defonce RsvpCard (.extend (.-Object Parse) "RsvpCard"))
 
 (defonce app-state
   (atom {:selected [:details]
@@ -75,10 +82,14 @@
             :name "New York Loft Hostel"
             :notes "249 Varet St. ($)"}])]]))
 
-(defn find-results [x]
-  [[{:name "Henry Bean", :email "henry@bean.com"}
-    {:name "Zelda Cat", :email "zelda@cat.com"}]
-   [{:name "Disco Cat", :email "disco@cat.com"}]])
+(defn find-results [search-str]
+  (->> guests
+       (filterv (fn [{:keys [names email has-plus-one]}]
+                  (some (fn [name]
+                          (let [result (.indexOf (str/lower-case name)
+                                                 (str/lower-case search-str))]
+                            ((complement neg?) result)))
+                        names)))))
 
 (defn rsvp-search-view [{:keys [name results] :as data} owner]
   (reify om/IRender
@@ -100,56 +111,72 @@
          [:button {:type "submit"}
           "Find RSVP"]]]))))
 
-(defn rsvp-card-view [{[results] :results, {:keys [contact food-preferences] :as card} :card, :as data} owner]
+(defn send-rsvps! [{:keys [contact food-preferences rsvps] :as card}]
+  (println card)
+  (if (empty? rsvps)
+    (om/update! card :sent true)
+    (let [[name attending] (first rsvps)
+          rsvp-card (new RsvpCard)]
+      (.then (.save rsvp-card
+                    #js {"contact" contact
+                         "foodPreferences" food-preferences
+                         "name" name
+                         "attending" attending})
+             (fn [_]
+               (send-rsvps! (update-in card [:rsvps] rest)))))))
+
+(defn rsvp-card-view [{results :results, {:keys [contact food-preferences rsvps] :as card} :card, :as data} owner]
   (reify
     om/IRender
     (render [_]
-      (when (nil? contact)
-        (om/update! card :contact (:email (first results))))
-      (html
-       [:main
-        [:h2 "RSVP"]
-        [:form {:id "rsvpsubmit"
-                :onSubmit #(do (.. % (preventDefault))
-                               (om/update! card :sent true))}
-         [:section {:class "guests"}
-          (map-indexed
-           (fn [n {:keys [name] :as guest}]
-             [:div
-              [:input {:type "text", :class "guestname", :value name}]
-              [:fieldset
-               [:div
-                (let [radio-name (str "guest" n "rsvp")]
-                  (map (fn [[label for-str val]]
-                         (let [input-id (str "guest" n for-str)]
-                           [:div
-                            [:input {:type "radio"
-                                     :id input-id
-                                     :name radio-name
-                                     :onChange #(om/update! card [:rsvps name] val)}]
-                            [:label {:for input-id}
-                             label]]))
-                       (partition 3 ["Will attend"   "yes" true
-                                     "Sends regrets" "no" false])))]]])
-           results)
-          [:p {:class "small"}
-           "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]]
-         [:section {:class "addendums"}
-          [:label {:for "foodpref", :class "small"}
-           "We are planning on serving a buffet style meal that will be suitable for both meat eaters and vegetarians. Do you have any dietary restrictions or allergies that we should be aware of?"]
-          [:textarea {:name "foodpref"
-                      :ref "food-preferences"
-                      :value food-preferences
-                      :onChange #(om/update! card :food-preferences (.-value (om/get-node owner "food-preferences")))}]
+      (let [{:keys [names email has-plus-one]} (first results)]
+        (when (nil? contact)
+          (om/update! card :contact email))
+        (html
+         [:main
+          [:h2 "RSVP"]
+          [:form {:id "rsvpsubmit"
+                  :onSubmit (fn [e]
+                              (.preventDefault e)
+                              (send-rsvps! card))}
+             [:section {:class "guests"}
+              (map-indexed
+               (fn [idx name]
+                 [:div
+                  [:input {:type "text", :class "guestname", :value name}]
+                  [:fieldset
+                   [:div
+                    (let [radio-name (str "guest" idx "rsvp")]
+                      (map (fn [[label for-str val]]
+                             (let [input-id (str "guest" idx for-str)]
+                               [:div
+                                [:input {:type "radio"
+                                         :id input-id
+                                         :name radio-name
+                                         :onChange #(om/update! card [:rsvps name] val)}]
+                                [:label {:for input-id}
+                                 label]]))
+                           (partition 3 ["Will attend"   "yes" true
+                                         "Sends regrets" "no" false])))]]])
+               (cond-> names has-plus-one (conj "Guest Name")))
+              [:p {:class "small"}
+               "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]]
+             [:section {:class "addendums"}
+              [:label {:for "foodpref", :class "small"}
+               "We are planning on serving a buffet style meal that will be suitable for both meat eaters and vegetarians. Do you have any dietary restrictions or allergies that we should be aware of?"]
+              [:textarea {:name "foodpref"
+                          :ref "food-preferences"
+                          :value food-preferences
+                          :onChange #(om/update! card :food-preferences (.-value (om/get-node owner "food-preferences")))}]
 
-          [:label {:for "contact" :class "small"}
-           "If we need to contact you with any last-minute information, is this a good email address to use?"]
-          [:input {:type "text"
-                   :ref "contact"
-                   :value contact
-                   :onChange #(om/update! card :contact (.-value (om/get-node owner "contact")))}]
-          
-          [:button {:type "submit"} "RSVP"]]]]))))
+              [:label {:for "contact" :class "small"}
+               "If we need to contact you with any last-minute information, is this a good email address to use?"]
+              [:input {:type "text"
+                       :ref "contact"
+                       :value contact
+                       :onChange #(om/update! card :contact (.-value (om/get-node owner "contact")))}]
+              
+              [:button {:type "submit"} "RSVP"]]]])))))
 
 (defn rsvp-multiple-results-view [{:keys [name results] :as data} owner]
   (reify
@@ -160,13 +187,13 @@
         [:h2 (str "Oops! There are multiple matches for '" name "'")]
         [:p "But which RSVP is yours?"]
         [:ul {:id "rsvpresults"}
-         (map-indexed (fn [n {:keys [name]}]
+         (map-indexed (fn [n names]
                         [:li
-                         [:span name]
+                         [:span (first names)]
                          [:button
                           {:onClick (fn [_] (om/transact! data :results (fn [results] [(get results n)])))}
                           "Select"]])
-                      (map first results))]]))))
+                      (map :names results))]]))))
 
 (defn rsvp-search-results-view [{:keys [name results] :as data} owner]
   (reify
@@ -206,4 +233,19 @@
           [:rsvp]          (om/build rsvp-view rsvp-search))]))))
 
 (defn main []
+
+  #_(.initialize parse "GAyi1ijtz2VMauaRRDqgcfqiiJyW5vQtwVFbFjfc" "EZ5xm8O1AByYc75LUTFL4dj2vhfZg93vTOFeb1Mh")
+  
+  ;; var TestObject = Parse.Object.extend("TestObject");
+  ;; var testObject = new TestObject();
+  ;; testObject.save({foo: "bar"}, {
+  ;;                                success: function(object) {
+  ;;                                                           $(".success").show();
+  ;;                                                           },
+  ;;                                error: function(model, error) {
+  ;;                                                               $(".error").show();
+  ;;                                                               }
+  ;;                                });
+  
+  
   (om/root main-view app-state {:target (. js/document (getElementById "app"))}))
