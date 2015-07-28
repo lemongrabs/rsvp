@@ -60,6 +60,10 @@ h1, h2, h3, h4, h5 {
   padding: 0;
 }
 
+.center {
+  text-align: center;
+}
+
 
 /* header */
 
@@ -137,9 +141,15 @@ main {
     line-height: 130%;
   }
 
+  li {
+    margin-bottom: 10px;
+  }
+
   a {
     color: #000;
     font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer;
 
     &:hover {
       color: $pink;
@@ -256,7 +266,7 @@ main {
 
     .guestname {
       font-family: bebas;
-      font-size: 18px;
+      font-size: 22px;
       margin: 0 0 10px 0;
     }
 

@@ -83,11 +83,11 @@
     [:main
      [:h2 "Our celebration"]
      [:p "We eloped on May 11th, 2015 in a private ceremony at San Francisco City Hall, and are so excited to bring our friends and families together to celebrate."]
-     [:p {:align "center"}
+     [:p {:className "center"}
       [:strong "Saturday, September 19th 2015"]
       [:br] "6pm"
       [:br] "Cocktails, dinner, and music"]
-     [:p {:align "center"}
+     [:p {:className "center"}
       [:a {:href "https://goo.gl/maps/wXKle"} "Kinfolk 94"]
       [:br] "94 Wythe Ave."
       [:br] "Brooklyn, NY 11249"
@@ -113,16 +113,18 @@
             [:li
              [:a {:href url} name]
              ": " notes])
-          
           [{:url "http://wythehotel.com/"
             :name "Wythe Hotel"
-            :notes "80 Wythe Ave. ($$$, but across the street from our venue!)"}
+            :notes "80 Wythe Ave., Brooklyn ($$$, but across the street from our venue!)"}
            {:url "http://hotel17ny.com/"
             :name "Hotel 17"
-            :notes "225 E. 17th St. ($$)"}
+            :notes "225 E. 17th St., Manhattan ($$)"}
+           {:url "http://www.theboxhousehotel.com/"
+            :name "The Box House Hotel"
+            :notes "77 Box St., Brooklyn ($$)"}
            {:url "http://www.nylofthostel.com/"
             :name "New York Loft Hostel"
-            :notes "249 Varet St. ($)"}])]]))
+            :notes "249 Varet St., Brooklyn ($)"}])]]))
 
 (defn rsvp-search-view [{:keys [name results] :as data} owner]
   (reify om/IRender
@@ -170,7 +172,7 @@
       (let [{:keys [contact food-preferences infos] :as response} (om/observe owner (response))]
         (when (nil? contact)
           (om/update! response :contact (:contact party)))
-        
+
         (html
          [:main
           [:h2 "RSVP"]
@@ -221,7 +223,7 @@
                      :ref "contact"
                      :value contact
                      :onChange #(om/update! response :contact (.-value (om/get-node owner "contact")))}]
-            
+
             [:button {:type "submit"} "RSVP"]]]])))))
 
 (defn rsvp-multiple-results-view [{:keys [name results] :as data} owner]
@@ -231,7 +233,6 @@
       (html
        [:main
         [:h2 (str "Oops! There are multiple matches for '" name "'")]
-        [:p "But which RSVP is yours?"]
         [:ul {:id "rsvpresults"}
          (map-indexed (fn [n {:keys [name party]}]
                         [:li
@@ -241,7 +242,9 @@
                                       (go (om/update! data :party (assoc party
                                                                          :guests (<! (guests-in-party (:id party)))))))}
                           "Select"]])
-                      results)]]))))
+                      results)]
+        [:p "Can't find your RSVP? "
+          [:a {:href "???"} "Search again"]]]))))
 
 (defn rsvp-confirmation-view [response owner]
   (om/component
@@ -264,7 +267,10 @@
         (cond (true? sent) (om/build rsvp-confirmation-view response)
               (some? party) (om/build rsvp-card-view party)
               (seq results) (om/build rsvp-multiple-results-view data)
-              :else (html [:div "Zero"]))))))
+              :else (html [:main
+                            [:h2 (str "Oops! No results found for '" name "'")]
+                            [:p "Can't find your RSVP? "
+                              [:a {:href "???"} "Search again"]]]))))))
 
 (defn rsvp-view [{:keys [results] :as data} owner]
   (reify om/IRender
