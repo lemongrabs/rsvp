@@ -1,17 +1,17 @@
 (set-env!
-  :source-paths   #{"src"}
-  :resource-paths #{"resources" "resources/html" "resources/images" "resources/css" "resources/fonts"}
-  :dependencies '[
-    [adzerk/boot-cljs          "0.0-3308-0"      :scope "test"]
-    [adzerk/boot-cljs-repl     "0.1.10-SNAPSHOT" :scope "test"]
-    [adzerk/boot-reload        "0.3.1"           :scope "test"]
-    [pandeiro/boot-http        "0.6.3-SNAPSHOT"  :scope "test"]
-    [boot-sassc                "0.1.2"           :scope "test"]
-    
-    [org.clojure/clojure       "1.7.0"]
-    [org.clojure/clojurescript "0.0-3308"]
-    [org.omcljs/om "0.9.0"]
-    [sablono "0.3.4"]])
+ :source-paths   #{"src"}
+ :resource-paths #{"resources" "resources/html" "resources/images" "resources/css" "resources/fonts"}
+ :dependencies '[[adzerk/boot-cljs          "0.0-3308-0"     :scope "test"]
+                 [adzerk/boot-cljs-repl     "0.1.9"          :scope "test"]
+                 [adzerk/boot-reload        "0.3.1"          :scope "test"]
+                 [pandeiro/boot-http        "0.6.3-SNAPSHOT" :scope "test"]
+                 [boot-sassc                "0.1.2"          :scope "test"]
+                 
+                 [org.clojure/clojure       "1.7.0"]
+                 [org.clojure/clojurescript "0.0-3308"]
+                 [org.omcljs/om "0.9.0"]
+                 [sablono "0.3.4"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]])
 
 (require
   '[adzerk.boot-cljs      :refer [cljs]]
