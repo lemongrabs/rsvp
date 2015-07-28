@@ -263,7 +263,7 @@
                                             (:guests party))))
         (cond (true? sent) (om/build rsvp-confirmation-view response)
               (some? party) (om/build rsvp-card-view party)
-              (some? results) (om/build rsvp-multiple-results-view data)
+              (seq results) (om/build rsvp-multiple-results-view data)
               :else (html [:div "Zero"]))))))
 
 (defn rsvp-view [{:keys [results] :as data} owner]
