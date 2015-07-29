@@ -22,7 +22,8 @@
          :response {:contact nil
                     :food-preferences ""
                     :infos {}
-                    :sent false}}))
+                    :sent false
+                    :error nil}}))
 
 (defn search []
   (om/ref-cursor (:rsvp-search (om/root-cursor app-state))))
@@ -227,11 +228,17 @@
            (catch :default e
              [:error e]))))
 
+(defn validate-response [{:keys [guests] :as selection} {:keys [infos] :as response}]
+  (when (some (fn [{:keys [id] :as guest}]
+                (not (contains? infos id)))
+              guests)
+    "Please let us know whether each guest can attend."))
+
 (defn rsvp-card-view [{:keys [party guests] :as selection} owner]
   (reify
     om/IRender
     (render [_]
-      (let [{:keys [contact food-preferences infos] :as response} (om/observe owner (response))]
+      (let [{:keys [contact food-preferences infos error] :as response} (om/observe owner (response))]
         (when (nil? contact)
           (om/update! response :contact (:contact party)))
         
@@ -241,10 +248,13 @@
           [:form {:id "rsvpsubmit"
                   :onSubmit (fn [e]
                               (.preventDefault e)
-                              (go (let [[result data] (<! (send-rsvps! selection response))]
-                                    (condp = result
-                                      :success (om/update! response :sent true)
-                                      :failure (js/console.error "Error sending response to Parse:" data)))))}
+                              (if-let [error (validate-response selection response)]
+                                (om/update! response :error error)
+                                (go (om/update! response :error nil)
+                                    (let [[result data] (<! (send-rsvps! selection response))]
+                                      (condp = result
+                                        :success (om/update! response :sent true)
+                                        :failure (js/console.error "Error sending response to Parse:" data))))))}
            [:section {:class "guests"}
             (map-indexed
              (fn [idx {id :id, original-name :name :as info}]
@@ -272,7 +282,10 @@
                                        "Sends regrets" "no" false])))]]])
              guests)
             [:p {:class "small"}
-             "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]]
+             "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]
+            (when error
+              [:p
+               error])]
            [:section {:class "addendums"}
             [:label {:for "foodpref", :class "small"}
              "We are planning on serving a buffet style meal that will be suitable for both meat eaters and vegetarians. Do you have any dietary restrictions or allergies that we should be aware of?"]
