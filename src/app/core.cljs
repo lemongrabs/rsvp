@@ -14,6 +14,7 @@
   (atom {:selected [:details]
          :rsvp-search {:name ""
                        :results nil
+                       :error nil
                        :party {}}
          :party {}
          :selection {:party nil
@@ -169,7 +170,7 @@
             :name "New York Loft Hostel"
             :notes "249 Varet St., Brooklyn ($)"}])]]))
 
-(defn rsvp-search-view [{:keys [name results] :as data} owner]
+(defn rsvp-search-view [{:keys [name results error] :as data} owner]
   (reify om/IRender
     (render [_]
       (html
@@ -177,10 +178,13 @@
         [:h2 "RSVP"]
         [:form {:id "rsvpsearch"
                 :onSubmit #(do (.. % (preventDefault))
-                               (go (let [guests (<! (search-guests name))]
-                                     (om/update! data :results guests)
-                                     (when (= 1 (count guests))
-                                       (select-party! owner (get-in guests [0 :party]))))))}
+                               (go (if (>= (count name) 3)
+                                     (do (om/update! data :error nil)
+                                         (let [guests (<! (search-guests name))]
+                                           (om/update! data :results guests)
+                                           (when (= 1 (count guests))
+                                             (select-party! owner (get-in guests [0 :party])))))
+                                     (om/update! data :error "Please enter three or more characters."))))}
          [:label {:for "guestsearch"} "Enter the name on your invitation:"]
          [:input {:type "text"
                   :name "guestseearch"
@@ -189,6 +193,7 @@
                   :value name
                   :ref "name"
                   :onChange #(om/update! data :name (.-value (om/get-node owner "name")))}]
+         (when (some? error) [:div error])
          [:button {:type "submit"}
           "Find RSVP"]]]))))
 
