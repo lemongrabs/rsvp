@@ -61,7 +61,7 @@
                     (js->clj result)))
         [])))
 
-(defn nav-view [selected owner]
+(defn nav-view [{:keys [selected rsvp-search]} owner]
   (reify om/IRender
     (render [_]
       (html [:header
@@ -70,7 +70,10 @@
               (map (fn [[key text]]
                      [:li (if (= selected [key]) {:class "selected"} {})
                       [:a {:href "#"
-                           :onClick #(om/update! selected 0 key)}
+                           :onClick #(do (om/update! rsvp-search :results nil)
+                                         (om/update! rsvp-search :guests-in-party nil)
+                                         (om/update! rsvp-search :party nil)
+                                         (om/update! selected 0 key))}
                        text]])
                    (partition 2 [:details       "Details"
                                  :where-to-stay "Where to stay"
@@ -136,7 +139,6 @@
                 :onSubmit #(do (.. % (preventDefault))
                                (go (let [guests (<! (search-guests name))]
                                      (om/update! data :results guests)
-                                     (println "Guests: " guests)
                                      (when (= 1 (count guests))
                                        (om/update! data :guests-in-party (first guests))))))}
          [:label {:for "guestsearch"} "Enter the name on your invitation:"]
@@ -289,7 +291,7 @@
       (println "@app-state" data)
       (html
        [:div
-        (om/build nav-view selected)
+        (om/build nav-view data)
         (case selected
           [:details]       (om/build details-view selected)
           [:where-to-stay] where-to-stay
