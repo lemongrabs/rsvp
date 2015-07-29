@@ -128,7 +128,7 @@
      [:p "We eloped on May 11th, 2015 in a private ceremony at San Francisco City Hall, and are so excited to bring our friends and families together to celebrate."]
      [:p {:className "center"}
       [:strong "Saturday, September 19th 2015"]
-      [:br] "6pm"
+      [:br] "6 pm"
       [:br] "Cocktails, dinner, and music"]
      [:p {:className "center"}
       [:a {:href "https://goo.gl/maps/wXKle"} "Kinfolk 94"]
@@ -150,7 +150,7 @@
     [:p "Our venue is located in Williamsburg (94 Wythe Ave.) near both the L and the G trains, so if maximum ease of transportation to the event is a concern we'd recommend searching for lodging that's within walking distance of either of those train lines."]
     [:ul
      [:li
-      [:a {:href "https://www.airbnb.com"} "AirBnB"]
+      [:a {:href "https://www.airbnb.com"} "Airbnb"]
       " - Williamsburg and Greenpoint will probably be the most convenient neighborhoods to search for, but anything in Manhattan south of Central Park or in Brooklyn off of the L or G train lines would be a convenient subway ride away."]
      (map (fn [{:keys [url name notes]}]
             [:li
