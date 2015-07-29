@@ -57,8 +57,10 @@
 (defn query [c]
   (js/Parse.Query. c))
 
-(defn matches [q s v]
-  (.matches q s v))
+(defn matches [q s v & [{:keys [insensitive]}]]
+  (if-not insensitive
+    (.matches q s v)
+    (.matches q s v "i")))
 
 (defn matches-query [q0 s q1]
   (.matchesQuery q0 s q1))

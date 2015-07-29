@@ -47,7 +47,7 @@
 
 (defn search-guests [search-str]
   (go (if-let [result (<! (-> (parse/query Guest)
-                              (parse/matches "name" search-str)
+                              (parse/matches "name" search-str {:insensitive true})
                               (parse/include "party")
                               (parse/query-find)))]
         (-> (mapv (fn [guest]
