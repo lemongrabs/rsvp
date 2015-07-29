@@ -112,8 +112,7 @@
              [:ul
               (map (fn [[key text]]
                      [:li (if (= selected [key]) {:class "selected"} {})
-                      [:a {:href "#"
-                           :onClick #(do (reset-all! owner)
+                      [:a {:onClick #(do (reset-all! owner)
                                          (om/update! selected 0 key))}
                        text]])
                    (partition 2 [:details       "Details"
