@@ -177,33 +177,6 @@
             :name "New York Loft Hostel"
             :notes "249 Varet St., Brooklyn ($)"}])]]))
 
-(defn rsvp-search-view [{:keys [name results error] :as data} owner]
-  (reify om/IRender
-    (render [_]
-      (html
-       [:main
-        [:h2 "RSVP"]
-        [:form {:id "rsvpsearch"
-                :onSubmit #(do (.preventDefault %)
-                               (go (if (>= (count name) 3)
-                                     (do (om/update! data :error nil)
-                                         (let [guests (<! (search-guests name))]
-                                           (om/update! data :results guests)
-                                           (when (= 1 (count guests))
-                                             (select-party! owner (get-in guests [0 :party])))))
-                                     (om/update! data :error "Search query is too short!"))))}
-         [:label {:for "guestsearch"} "Enter the name on your invitation:"]
-         [:input {:type "text"
-                  :name "guestseearch"
-                  :class "guestsearch"
-                  :placeholder "e.g. Barack and Michelle Obama"
-                  :value name
-                  :ref "name"
-                  :onChange #(om/update! data :name (.-value (om/get-node owner "name")))}]
-         (when (some? error) [:div {:class "error"} error])
-         [:button {:type "submit"}
-          "Find RSVP"]]]))))
-
 (defn send-rsvps! [{:keys [party guests] :as selection} {:keys [contact food-preferences infos sent] :as response}]
   (go (try (let [[result response-or-error] (<! (parse/save Response {:party (let [p (Party.)]
                                                                                (set! (.-id p)
@@ -227,6 +200,39 @@
            [:success]
            (catch :default e
              [:error e]))))
+
+(defn unique-parties [guests]
+  (->> guests
+       (group-by #(get-in % [:party :id]))
+       (mapv (fn [[_ v]] (first v)))))
+
+(defn rsvp-search-view [{:keys [name results error] :as data} owner]
+  (reify om/IRender
+    (render [_]
+      (html
+       [:main
+        [:h2 "RSVP"]
+        [:form {:id "rsvpsearch"
+                :onSubmit #(do (.preventDefault %)
+                               (go (if (>= (count name) 3)
+                                     (do (om/update! data :error nil)
+                                         (let [guests (<! (search-guests name))
+                                               unique-guests (unique-parties guests)]
+                                           (om/update! data :results guests)
+                                           (when (= 1 (count unique-guests))
+                                             (select-party! owner (get-in unique-guests [0 :party])))))
+                                     (om/update! data :error "Search query is too short!"))))}
+         [:label {:for "guestsearch"} "Enter the name on your invitation:"]
+         [:input {:type "text"
+                  :name "guestseearch"
+                  :class "guestsearch"
+                  :placeholder "e.g. Barack and Michelle Obama"
+                  :value name
+                  :ref "name"
+                  :onChange #(om/update! data :name (.-value (om/get-node owner "name")))}]
+         (when (some? error) [:div {:class "error"} error])
+         [:button {:type "submit"}
+          "Find RSVP"]]]))))
 
 (defn validate-response [{:keys [guests] :as selection} {:keys [infos] :as response}]
   (when (some (fn [{:keys [id] :as guest}]
@@ -316,9 +322,7 @@
                          [:button
                           {:onClick #(select-party! owner party)}
                           "Select"]])
-                      (->> results
-                           (group-by #(get-in % [:party :id]))
-                           (map (fn [[_ v]] (first v)))))]
+                      (unique-parties results))]
         [:p "Can't find your RSVP? "
          [:a {:onClick #(do (.preventDefault %)
                             (reset-search! owner)
@@ -331,7 +335,6 @@
     [:main
      [:h1 "Thank you!"]
      (let [{:keys [guests] :as selection} (om/observe owner (selection))]
-       [:pre (with-out-str (pp/pprint @selection))]
        [:ul
         (map (fn [{:keys [id name] :as guest}]
                [:li (str name
@@ -347,18 +350,25 @@
   (reify
     om/IRender
     (render [_]
-      (let [{:keys [party] :as selection} (om/observe owner (selection))
-            {:keys [infos sent] :as response} (om/observe owner (response))]
-        (cond (true? sent)            (om/build rsvp-confirmation-view response)
-              (party-selected? owner) (om/build rsvp-card-view selection)
-              (seq results)           (om/build rsvp-multiple-results-view data)
-              :else                   (html [:main
-                                             [:h2 (str "Oops! No results found for '" name "'")]
-                                             [:p "Can't find your RSVP? "
-                                              [:a {:onClick #(do (.preventDefault %)
-                                                                 (reset-search! owner)
-                                                                 (reset-selection! owner))}
-                                               "Search again"]]]))))))
+      (html
+       (let [{:keys [party] :as selection} (om/observe owner (selection))
+             {:keys [infos sent] :as response} (om/observe owner (response))]
+         (cond (true? sent)
+               (om/build rsvp-confirmation-view response)
+               
+               (party-selected? owner)
+               (om/build rsvp-card-view selection)
+               
+               (seq? results)
+               (om/build rsvp-multiple-results-view data)
+               
+               :else (html [:main
+                            [:h2 (str "Oops! No results found for '" name "'")]
+                            [:p "Can't find your RSVP? "
+                             [:a {:onClick #(do (.preventDefault %)
+                                                (reset-search! owner)
+                                                (reset-selection! owner))}
+                              "Search again"]]])))))))
 
 (defn rsvp-view [{:keys [results] :as data} owner]
   (reify om/IRender
