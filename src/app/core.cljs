@@ -330,8 +330,19 @@
   (om/component
    (html
     [:main
-     [:h1 "Confirmed!"]
-     [:pre (with-out-str (pp/pprint @response))]])))
+     [:h1 "Thank you!"]
+     (let [{:keys [guests] :as selection} (om/observe owner (selection))]
+       [:pre (with-out-str (pp/pprint @selection))]
+       [:ul
+        (map (fn [{:keys [id name] :as guest}]
+               [:li (str name
+                         (if (get-in response [:infos id]) " will " " will not ")
+                         "attend.")])
+             guests)])
+     [:h2 "Doesn't look right?"]
+     [:p "Please " [:a {:href "mailto:anhthuandzane@googlegroups.com"}
+                    "email us"]
+      " and let us know!"]])))
 
 (defn rsvp-search-results-view [{:keys [name results] :as data} owner]
   (reify
