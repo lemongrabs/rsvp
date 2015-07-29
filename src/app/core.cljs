@@ -39,24 +39,30 @@
 (defonce Guest (.extend (.-Object parse/Parse) "Guest"))
 
 (defn save-parties [parties]
-  (go (doseq [{:keys [names contact has-plus-one]} parties]
-        (let [party (<! (parse/save Party {:contact contact
-                                           :additional (if has-plus-one 1 0)}))]
-          (doseq [name names]
-            (<! (parse/save Guest {:name name
-                                   :party party})))))))
+  (go (doseq [{:keys [title names contact has-plus-one]} parties]
+        (let [[result party-or-error] (<! (parse/save Party {:contact contact
+                                                             :additional (if has-plus-one 1 0)
+                                                             :title title}))]
+          (if (= :success result)
+            (doseq [name names]
+              (let [[result guest-or-error] (<! (parse/save Guest {:name name
+                                                                   :party party-or-error}))]
+                (if (= :success result)
+                  (js/console.log "Saved guest.")
+                  (js/console.error "Error saving guest: " guest-or-error))))
+            (js/console.error "Error saving party: " party-or-error))))))
 
 (defn search-guests [search-str]
-  (go (if-let [result (<! (-> (parse/query Guest)
-                              (parse/matches "name" search-str {:insensitive true})
-                              (parse/include "party")
-                              (parse/query-find)))]
-        (-> (mapv (fn [guest]
-                    (-> guest
-                        (parse/parse-obj->map)
-                        (update-in [:party] parse/parse-obj->map)))
-                  (js->clj result)))
-        [])))
+  (go (let [result (<! (parse/query-find (doto (parse/query Guest)
+                                           (.matches "name" search-str "i")
+                                           (.include "party"))))]
+        (if result
+          (-> (mapv (fn [guest]
+                      (-> guest
+                          (parse/parse-obj->map)
+                          (update-in [:party] parse/parse-obj->map)))
+                    (js->clj result)))
+          []))))
 
 (defn guests-in-party [party-id]
   (go (if-let [result (<! (-> (parse/query Guest)
@@ -177,7 +183,7 @@
        [:main
         [:h2 "RSVP"]
         [:form {:id "rsvpsearch"
-                :onSubmit #(do (.. % (preventDefault))
+                :onSubmit #(do (.preventDefault %)
                                (go (if (>= (count name) 3)
                                      (do (om/update! data :error nil)
                                          (let [guests (<! (search-guests name))]
@@ -300,7 +306,7 @@
         [:ul {:id "rsvpresults"}
          (map-indexed (fn [n {:keys [name party]}]
                         [:li
-                         [:span name]
+                         [:span (get-in party [:title])]
                          [:button
                           {:onClick #(select-party! owner party)}
                           "Select"]])
@@ -349,7 +355,7 @@
 (defn main-view [{:keys [selected rsvp-search] :as data} owner]
   (reify om/IRender
     (render [_]
-      (println "@app-state" data)
+      #_(println "@app-state" data)
       (html
        [:div
         (om/build nav-view data)
