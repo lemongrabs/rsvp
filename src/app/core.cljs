@@ -333,9 +333,9 @@
   (om/component
    (html
     [:main
-     [:h1 "Thank you!"]
+     [:h2 "Thank you!"]
      (let [{:keys [guests] :as selection} (om/observe owner (selection))]
-       [:ul
+       [:ul {:class "summary"}
         (map (fn [{:keys [id name] :as guest}]
                [:li (str name
                          (if (get-in response [:infos id :attending]) " will " " will not ")
