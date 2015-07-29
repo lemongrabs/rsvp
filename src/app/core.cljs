@@ -359,7 +359,7 @@
                (party-selected? owner)
                (om/build rsvp-card-view selection)
                
-               (seq? results)
+               (seq results)
                (om/build rsvp-multiple-results-view data)
                
                :else (html [:main
