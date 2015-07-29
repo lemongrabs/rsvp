@@ -190,7 +190,7 @@
                                            (om/update! data :results guests)
                                            (when (= 1 (count guests))
                                              (select-party! owner (get-in guests [0 :party])))))
-                                     (om/update! data :error "Please enter three or more characters."))))}
+                                     (om/update! data :error "Search query is too short!"))))}
          [:label {:for "guestsearch"} "Enter the name on your invitation:"]
          [:input {:type "text"
                   :name "guestseearch"
@@ -199,7 +199,7 @@
                   :value name
                   :ref "name"
                   :onChange #(om/update! data :name (.-value (om/get-node owner "name")))}]
-         (when (some? error) [:div error])
+         (when (some? error) [:div {:className "error"} error])
          [:button {:type "submit"}
           "Find RSVP"]]]))))
 
