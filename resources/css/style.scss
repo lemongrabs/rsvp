@@ -106,6 +106,7 @@ header {
     a {
       color: #fff;
       text-decoration: none;
+      cursor: pointer;
     }
 
     &.selected a,
@@ -231,6 +232,11 @@ main {
       width: 100%;
       font-size: 24px;
     }
+
+    .error {
+      color: $pink;
+      display: inline-block;
+    }
   }
 
   #rsvpresults {
@@ -241,6 +247,7 @@ main {
       display: flex;
       justify-content: space-between;
       padding-bottom: 10px;
+      margin-bottom: 0;
 
       &:not(:last-child) {
         border-bottom: 1px solid #000;
@@ -268,6 +275,14 @@ main {
       font-family: bebas;
       font-size: 22px;
       margin: 0 0 10px 0;
+    }
+
+    label {
+      margin-left: 5px;
+
+      &:hover {
+        cursor: pointer;
+      }
     }
 
     .small {
