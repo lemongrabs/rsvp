@@ -22,6 +22,7 @@
          :response {:contact nil
                     :food-preferences ""
                     :infos {}
+                    :plusses {}
                     :sent false
                     :error nil}}))
 
@@ -38,6 +39,7 @@
 (defonce Info (.extend (.-Object parse/Parse) "Info"))
 (defonce Party (.extend (.-Object parse/Parse) "Party"))
 (defonce Guest (.extend (.-Object parse/Parse) "Guest"))
+(defonce Plus (.extend (.-Object parse/Parse) "Plus"))
 
 (defn save-parties [parties]
   (go (doseq [{:keys [title names contact has-plus-one]} parties]
@@ -177,7 +179,7 @@
             :name "New York Loft Hostel"
             :notes "249 Varet St., Brooklyn ($)"}])]]))
 
-(defn send-rsvps! [{:keys [party guests] :as selection} {:keys [contact food-preferences infos sent] :as response}]
+(defn send-rsvps! [{:keys [party guests] :as selection} {:keys [contact food-preferences infos plusses sent] :as response}]
   (go (try (let [[result response-or-error] (<! (parse/save Response {:party (let [p (Party.)]
                                                                                (set! (.-id p)
                                                                                      (get-in party [:id]))
@@ -185,17 +187,24 @@
                                                                       :contact contact
                                                                       :foodPreferences food-preferences}))]
              (if (= :success result)
-               (doseq [[id {:keys [corrected-name attending]}] infos]
-                 (let [[result info-or-error] (<! (parse/save Info {:response response-or-error
-                                                                    :guest (let [g (Guest.)]
-                                                                             (set! (.-id g)
-                                                                                   id)
-                                                                             g)
-                                                                    :correctedName corrected-name
-                                                                    :attending attending}))]
-                   (when-not (= result :success)
-                     (js/console.error "Error! Error! " info-or-error)
-                     (throw info-or-error))))
+               (do (doseq [[id {:keys [corrected-name attending]}] infos]
+                     (let [[result info-or-error] (<! (parse/save Info {:response response-or-error
+                                                                        :guest (let [g (Guest.)]
+                                                                                 (set! (.-id g)
+                                                                                       id)
+                                                                                 g)
+                                                                        :correctedName corrected-name
+                                                                        :attending attending}))]
+                       (when-not (= result :success)
+                         (js/console.error "Error! Error! " info-or-error)
+                         (throw info-or-error))))
+                   (doseq [[id {:keys [name attending]}] plusses]
+                     (let [[result plus-or-error] (<! (parse/save Plus {:response response-or-error
+                                                                        :name name
+                                                                        :attending attending}))]
+                       (when-not (= result :success)
+                         (js/console.error "Error! Error! " plus-or-error)
+                         (throw plus-or-error)))))
                (throw response-or-error)))
            [:success]
            (catch :default e
@@ -244,7 +253,7 @@
   (reify
     om/IRender
     (render [_]
-      (let [{:keys [contact food-preferences infos error] :as response} (om/observe owner (response))]
+      (let [{:keys [contact food-preferences infos plusses error] :as response} (om/observe owner (response))]
         (when (nil? contact)
           (om/update! response :contact (:contact party)))
 
@@ -287,6 +296,31 @@
                          (partition 3 ["Will attend"   "yes" true
                                        "Sends regrets" "no" false])))]]])
              guests)
+            (map-indexed
+             (fn [idx]
+               [:div
+                [:input {:type "text"
+                         :class "guestname"
+                         :value (or (get-in plusses [idx :name]) "Guest")
+                         :ref (str "plus" idx "name")
+                         :onChange #(om/update! response [:plusses idx :name] (.-value (om/get-node owner (str "plus" idx "name"))))}]
+                [:fieldset
+                 [:div
+                  (let [radio-name (str "plus" idx "rsvp")]
+                    (map (fn [[label for-str val]]
+                           (let [input-id (str "plus" idx for-str)]
+                             [:div
+                              [:input (cond-> {:type "radio"
+                                               :id input-id
+                                               :name radio-name
+                                               :onChange #(om/update! response [:plusses idx :attending] val)}
+                                        (= val (get-in plusses [idx :attending]))
+                                        (assoc :checked true))]
+                              [:label {:for input-id}
+                               label]]))
+                         (partition 3 ["Will attend"   "yes" true
+                                       "Sends regrets" "no" false])))]]])
+             (range (:additional party)))
             [:p {:class "small"}
              "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]
             (when error
@@ -329,7 +363,7 @@
                             (reset-selection! owner))}
           "Search again"]]]))))
 
-(defn rsvp-confirmation-view [response owner]
+(defn rsvp-confirmation-view [{:keys [infos plusses] :as response} owner]
   (om/component
    (html
     [:main
@@ -337,10 +371,15 @@
      (let [{:keys [guests] :as selection} (om/observe owner (selection))]
        [:ul
         (map (fn [{:keys [id name] :as guest}]
-               [:li (str name
-                         (if (get-in response [:infos id :attending]) " will " " will not ")
+               [:li (str (or (get-in infos [id :name]) name)
+                         (if (get-in infos [id :attending]) " will " " will not ")
                          "attend.")])
-             guests)])
+             guests)
+        (map (fn [[_ {:keys [name attending] :as plus}]]
+               [:li (str name
+                         (if attending " will " " will not ")
+                         "attend.")])
+             plusses)])
      [:h2 "Doesn't look right?"]
      [:p "Please " [:a {:href "mailto:anhthuandzane@googlegroups.com"}
                     "email us"]
