@@ -134,11 +134,11 @@
     [:main
      [:h2 "Our celebration"]
      [:p "We eloped on May 11th, 2015 in a private ceremony at San Francisco City Hall, and are so excited to bring our friends and families together to celebrate."]
-     [:p {:className "center"}
+     [:p {:class "center"}
       [:strong "Saturday, September 19th 2015"]
       [:br] "6 pm"
       [:br] "Cocktails, dinner, and music"]
-     [:p {:className "center"}
+     [:p {:class "center"}
       [:a {:href "https://goo.gl/maps/wXKle"} "Kinfolk 94"]
       [:br] "94 Wythe Ave."
       [:br] "Brooklyn, NY 11249"
@@ -200,7 +200,7 @@
                   :value name
                   :ref "name"
                   :onChange #(om/update! data :name (.-value (om/get-node owner "name")))}]
-         (when (some? error) [:div {:className "error"} error])
+         (when (some? error) [:div {:class "error"} error])
          [:button {:type "submit"}
           "Find RSVP"]]]))))
 
@@ -232,7 +232,7 @@
   (when (some (fn [{:keys [id] :as guest}]
                 (not (contains? infos id)))
               guests)
-    "Please let us know whether each guest can attend."))
+    "Please select a response for each guest."))
 
 (defn rsvp-card-view [{:keys [party guests] :as selection} owner]
   (reify
@@ -241,7 +241,7 @@
       (let [{:keys [contact food-preferences infos error] :as response} (om/observe owner (response))]
         (when (nil? contact)
           (om/update! response :contact (:contact party)))
-        
+
         (html
          [:main
           [:h2 "RSVP"]
@@ -284,8 +284,7 @@
             [:p {:class "small"}
              "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]
             (when error
-              [:p
-               error])]
+              [:p {:class "error small"} error])]
            [:section {:class "addendums"}
             [:label {:for "foodpref", :class "small"}
              "We are planning on serving a buffet style meal that will be suitable for both meat eaters and vegetarians. Do you have any dietary restrictions or allergies that we should be aware of?"]
@@ -295,7 +294,7 @@
                         :onChange #(om/update! response :food-preferences (.-value (om/get-node owner "food-preferences")))}]
 
             [:label {:for "contact" :class "small"}
-             "If we need to contact you with any last-minute information, is this a good email address to use?"]
+             "If we need to contact you with any last-minute information, what email address should we use?"]
             [:input {:type "text"
                      :ref "contact"
                      :value contact
