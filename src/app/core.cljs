@@ -338,7 +338,7 @@
        [:ul
         (map (fn [{:keys [id name] :as guest}]
                [:li (str name
-                         (if (get-in response [:infos id]) " will " " will not ")
+                         (if (get-in response [:infos id :attending]) " will " " will not ")
                          "attend.")])
              guests)])
      [:h2 "Doesn't look right?"]
