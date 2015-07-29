@@ -276,17 +276,19 @@ main {
       justify-content: space-between;
     }
 
-    .guestname {
-      font-family: bebas;
-      font-size: 22px;
-      margin: 0 0 10px 0;
-    }
+    .guests {
+      .guestname {
+        font-family: bebas;
+        font-size: 22px;
+        margin: 0 0 10px 0;
+      }
 
-    label {
-      margin-left: 5px;
+      label {
+        margin-left: 5px;
 
-      &:hover {
-        cursor: pointer;
+        &:hover {
+          cursor: pointer;
+        }
       }
     }
 
