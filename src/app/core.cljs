@@ -109,7 +109,7 @@
 (defn reset-all! [owner]
   (reset-search! owner)
   (reset-selection! owner)
-  #_(reset-response! owner))
+  (reset-response! owner))
 
 (defn nav-view [{:keys [selected rsvp-search]} owner]
   (reify om/IRender
@@ -236,65 +236,59 @@
           (om/update! response :contact (:contact party)))
         
         (html
-         [:div
-          [:main
-           [:h1 "Selection"]
-           [:code (with-out-str (cljs.pprint/pprint selection))]
-           [:h1 "Response"]
-           [:code (with-out-str (cljs.pprint/pprint response))]]
-          [:main
-           [:h2 "RSVP"]
-           [:form {:id "rsvpsubmit"
-                   :onSubmit (fn [e]
-                               (.preventDefault e)
-                               (go (let [[result data] (<! (send-rsvps! selection response))]
-                                     (condp = result
-                                       :success (om/update! response :sent true)
-                                       :failure (js/console.error "Error sending response to Parse:" data)))))}
-            [:section {:class "guests"}
-             (map-indexed
-              (fn [idx {id :id, original-name :name :as info}]
-                [:div
-                 [:input {:type "text"
-                          :class "guestname"
-                          :value (or (get-in infos [id :corrected-name]) original-name)
-                          :ref (str id "name")
-                          :onChange #(om/update! response [:infos id :corrected-name] (.-value (om/get-node owner (str id "name"))))}]
-                 [:fieldset
-                  [:div
-                   (let [radio-name (str "guest" idx "rsvp")]
-                     (map (fn [[label for-str val]]
-                            (let [input-id (str "guest" idx for-str)]
-                              [:div
-                               [:input (cond-> {:type "radio"
-                                                :id input-id
-                                                :name radio-name
-                                                :onChange #(om/update! response [:infos id :attending] val)}
-                                         (= val (get-in infos [id :attending]))
-                                         (assoc :checked true))]
-                               [:label {:for input-id}
-                                label]]))
-                          (partition 3 ["Will attend"   "yes" true
-                                        "Sends regrets" "no" false])))]]])
-              guests)
-             [:p {:class "small"}
-              "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]]
-            [:section {:class "addendums"}
-             [:label {:for "foodpref", :class "small"}
-              "We are planning on serving a buffet style meal that will be suitable for both meat eaters and vegetarians. Do you have any dietary restrictions or allergies that we should be aware of?"]
-             [:textarea {:name "foodpref"
-                         :ref "food-preferences"
-                         :value food-preferences
-                         :onChange #(om/update! response :food-preferences (.-value (om/get-node owner "food-preferences")))}]
+         [:main
+          [:h2 "RSVP"]
+          [:form {:id "rsvpsubmit"
+                  :onSubmit (fn [e]
+                              (.preventDefault e)
+                              (go (let [[result data] (<! (send-rsvps! selection response))]
+                                    (condp = result
+                                      :success (om/update! response :sent true)
+                                      :failure (js/console.error "Error sending response to Parse:" data)))))}
+           [:section {:class "guests"}
+            (map-indexed
+             (fn [idx {id :id, original-name :name :as info}]
+               [:div
+                [:input {:type "text"
+                         :class "guestname"
+                         :value (or (get-in infos [id :corrected-name]) original-name)
+                         :ref (str id "name")
+                         :onChange #(om/update! response [:infos id :corrected-name] (.-value (om/get-node owner (str id "name"))))}]
+                [:fieldset
+                 [:div
+                  (let [radio-name (str "guest" idx "rsvp")]
+                    (map (fn [[label for-str val]]
+                           (let [input-id (str "guest" idx for-str)]
+                             [:div
+                              [:input (cond-> {:type "radio"
+                                               :id input-id
+                                               :name radio-name
+                                               :onChange #(om/update! response [:infos id :attending] val)}
+                                        (= val (get-in infos [id :attending]))
+                                        (assoc :checked true))]
+                              [:label {:for input-id}
+                               label]]))
+                         (partition 3 ["Will attend"   "yes" true
+                                       "Sends regrets" "no" false])))]]])
+             guests)
+            [:p {:class "small"}
+             "(If we've gotten anyone's name wrong, we apologize! Please correct it here so that we can stop embarrassing ourselves.)"]]
+           [:section {:class "addendums"}
+            [:label {:for "foodpref", :class "small"}
+             "We are planning on serving a buffet style meal that will be suitable for both meat eaters and vegetarians. Do you have any dietary restrictions or allergies that we should be aware of?"]
+            [:textarea {:name "foodpref"
+                        :ref "food-preferences"
+                        :value food-preferences
+                        :onChange #(om/update! response :food-preferences (.-value (om/get-node owner "food-preferences")))}]
 
-             [:label {:for "contact" :class "small"}
-              "If we need to contact you with any last-minute information, is this a good email address to use?"]
-             [:input {:type "text"
-                      :ref "contact"
-                      :value contact
-                      :onChange #(om/update! response :contact (.-value (om/get-node owner "contact")))}]
+            [:label {:for "contact" :class "small"}
+             "If we need to contact you with any last-minute information, is this a good email address to use?"]
+            [:input {:type "text"
+                     :ref "contact"
+                     :value contact
+                     :onChange #(om/update! response :contact (.-value (om/get-node owner "contact")))}]
 
-             [:button {:type "submit"} "RSVP"]]]]])))))
+            [:button {:type "submit"} "RSVP"]]]])))))
 
 (defn rsvp-multiple-results-view [{:keys [name results] :as data} owner]
   (reify
@@ -310,7 +304,9 @@
                          [:button
                           {:onClick #(select-party! owner party)}
                           "Select"]])
-                      results)]
+                      (->> results
+                           (group-by #(get-in % [:party :id]))
+                           (map (fn [[_ v]] (first v)))))]
         [:p "Can't find your RSVP? "
          [:a {:onClick #(do (.preventDefault %)
                             (reset-search! owner)
