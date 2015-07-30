@@ -374,14 +374,30 @@
                          (if (get-in infos [id :attending]) " will " " will not ")
                          "attend.")])
              guests)
-        (map (fn [[_ {:keys [name attending] :as plus}]]
-               [:li (str name
-                         (if attending " will " " will not ")
-                         "attend.")])
-             plusses)])
+        (let [unnamed-guests (filter (comp str/blank? :name)
+                                     (vals plusses))
+              unnamed-attending (count (filter (comp true? :attending)
+                                               unnamed-guests))
+              unnamed-regrets   (count (filter (comp false? :attending)
+                                               unnamed-guests))]
+          (when (pos? unnamed-attending)
+            [:li (str unnamed-attending
+                      " additional "
+                      (if (= 1 unnamed-attending)
+                        "guest"
+                        "guests")
+                      " will attend.")])
+          (when (pos? unnamed-regrets)
+            [:li (str unnamed-regrets
+                      " additional "
+                      (if (= 1 unnamed-regrets)
+                        "guest"
+                        "guests")
+                      " will not attend.")]))])
      [:h2 "Doesn't look right?"]
-     [:p "Please " [:a {:href "mailto:anhthuandzane@googlegroups.com"}
-                    "email us"]
+     [:p
+      "Please "
+      [:a {:href "mailto:anhthuandzane@googlegroups.com"} "email us"]
       " and let us know!"]])))
 
 (defn rsvp-search-results-view [{:keys [name results] :as data} owner]
