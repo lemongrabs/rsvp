@@ -5,8 +5,7 @@
             [cljs.pprint :as pp]
             [app.parse :as parse]
             [om.core :as om :include-macros true]
-            [sablono.core :as html :refer-macros [html]]
-            [app.parties :as parties]))
+            [sablono.core :as html :refer-macros [html]]))
 
 (enable-console-print!)
 
