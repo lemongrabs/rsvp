@@ -5,8 +5,7 @@
             [cljs.pprint :as pp]
             [app.parse :as parse]
             [om.core :as om :include-macros true]
-            [sablono.core :as html :refer-macros [html]]
-            [app.parties :as parties]))
+            [sablono.core :as html :refer-macros [html]]))
 
 (enable-console-print!)
 
@@ -370,19 +369,41 @@
      [:h2 "Thank you!"]
      (let [{:keys [guests] :as selection} (om/observe owner (selection))]
        [:ul {:class "summary"}
-        (map (fn [{:keys [id name] :as guest}]
-               [:li (str (or (get-in infos [id :name]) name)
-                         (if (get-in infos [id :attending]) " will " " will not ")
-                         "attend.")])
-             guests)
-        (map (fn [[_ {:keys [name attending] :as plus}]]
-               [:li (str name
-                         (if attending " will " " will not ")
-                         "attend.")])
-             plusses)])
+        (concat
+         (map (fn [{:keys [id name] :as guest}]
+                [:li (str (or (get-in infos [id :name]) name)
+                          (if (get-in infos [id :attending]) " will " " will not ")
+                          "attend.")])
+              guests)
+         (let [named-guests (remove (comp str/blank? :name)
+                                    (vals plusses))
+               unnamed-guests (filter (comp str/blank? :name)
+                                      (vals plusses))
+               unnamed-attending (count (filter (comp true? :attending)
+                                                unnamed-guests))
+               unnamed-regrets   (count (filter (comp false? :attending)
+                                                unnamed-guests))]
+           [(map (fn [{:keys [name attending]}]
+                   [:li (str name (if attending " will " " will not ") "attend.")])
+                 named-guests)
+            (when (pos? unnamed-attending)
+              [:li (str unnamed-attending
+                        " additional "
+                        (if (= 1 unnamed-attending)
+                          "guest"
+                          "guests")
+                        " will attend.")])
+            (when (pos? unnamed-regrets)
+              [:li (str unnamed-regrets
+                        " additional "
+                        (if (= 1 unnamed-regrets)
+                          "guest"
+                          "guests")
+                        " will not attend.")])]))])
      [:h2 "Doesn't look right?"]
-     [:p "Please " [:a {:href "mailto:anhthuandzane@googlegroups.com"}
-                    "email us"]
+     [:p
+      "Please "
+      [:a {:href "mailto:anhthuandzane@googlegroups.com"} "email us"]
       " and let us know!"]])))
 
 (defn rsvp-search-results-view [{:keys [name results] :as data} owner]
