@@ -62,7 +62,8 @@ header {
       display: flex;
       -webkit-justify-content: space-between;
       -moz-justify-content: space-between;
-      -ms-justify-content: space-between; } }
+      -ms-justify-content: space-between;
+      justify-content: space-between; } }
   header h1 {
     font-size: 48px;
     display: inline-block; }
