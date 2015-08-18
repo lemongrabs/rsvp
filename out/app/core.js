@@ -3405,7 +3405,7 @@ return cljs.core.async.impl.ioc_helpers.run_state_machine_wrapped.call(null,stat
 
 return c__6701__auto__;
 });})(___$1,map__15655,map__15655__$1,data,name,results,error))
-},React.createElement("label",{"htmlFor": "guestsearch"},"Enter the name on your invitation:"),sablono.interpreter.create_element.call(null,"input",{"type": "text", "name": "guestseearch", "placeholder": "e.g. Barack and Michelle Obama", "value": self__.name, "ref": "name", "onChange": ((function (___$1,map__15655,map__15655__$1,data,name,results,error){
+},React.createElement("label",{"htmlFor": "guestsearch"},"Search for your name (first, last, or full):"),sablono.interpreter.create_element.call(null,"input",{"type": "text", "name": "guestseearch", "placeholder": "e.g. Barack", "value": self__.name, "ref": "name", "onChange": ((function (___$1,map__15655,map__15655__$1,data,name,results,error){
 return (function (){
 return om.core.update_BANG_.call(null,self__.data,new cljs.core.Keyword(null,"name","name",1843675177),om.core.get_node.call(null,self__.owner,"name").value);
 });})(___$1,map__15655,map__15655__$1,data,name,results,error))
