@@ -230,11 +230,11 @@
                                            (when (= 1 (count unique-guests))
                                              (select-party! owner (get-in unique-guests [0 :party])))))
                                      (om/update! data :error "Search query is too short!"))))}
-         [:label {:for "guestsearch"} "Enter the name on your invitation:"]
+         [:label {:for "guestsearch"} "Search for your name (first, last, or full):"]
          [:input {:type "text"
                   :name "guestseearch"
                   :class "guestsearch"
-                  :placeholder "e.g. Barack and Michelle Obama"
+                  :placeholder "e.g. Barack"
                   :value name
                   :ref "name"
                   :onChange #(om/update! data :name (.-value (om/get-node owner "name")))}]
