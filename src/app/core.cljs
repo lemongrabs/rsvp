@@ -138,7 +138,8 @@
      [:p {:class "center"}
       [:strong "Saturday, September 19th 2015"]
       [:br] "6 pm"
-      [:br] "Cocktails, dinner, and music"]
+      [:br] "Cocktails, dinner, and music"
+      [:br] "Dress code: cocktail attire, or whatever you feel best in!"]
      [:p {:class "center"}
       [:a {:href "https://goo.gl/maps/wXKle"} "Kinfolk 94"]
       [:br] "94 Wythe Ave."
